@@ -2,15 +2,27 @@ const express = require('express');
 const passport = require('passport');
 const router = express.Router();
 
+// file:app/authentication/middleware.js
+function authenticationMiddleware () {
+    return function (req, res, next) {
+        if (req.isAuthenticated()) {
+            console.log('authenticationMiddleware True');
+            return next()
+        }
+        console.log('authenticationMiddleware False');
+        res.redirect('/login')
+    }
+}
+
 const userController = require('../controllers/userController');
 
 /* GET home page. */
-router.get('/',(req, res, next) => {
+router.get('/',(req, res) => {
   res.render('index', { title: 'Index' });
 });
 
 /* GET Login page. */
-router.get('/login', (req, res, next) => {
+router.get('/login', (req, res) => {
     res.render('login', { title: 'Login'});
 });
 router.post('/login', passport.authenticate('local', {
@@ -20,29 +32,9 @@ router.post('/login', passport.authenticate('local', {
 }));
 
 /* GET Private page. */
-router.get('/private', (req, res, next) => {
-  // console.log(req);
-    if(req.isAuthenticated()){
+router.get('/private', authenticationMiddleware(),(req, res) => {
         res.send('Wellcome to Private page!');
-    }else{
-        res.redirect('/login');
     }
-})
-
-/* GET register page. */
-// router.get('/register', (req, res) => {
-//     res.render('register', { title: 'Register', user: req.user });
-// });
-// router.post('/register', function(req, res) {
-//     userController.register(new Account({ username : req.body.username }), req.body.password, function(err, account) {
-//         if (err) {
-//             return res.render('register', { account : account });
-//         }
-//
-//         passport.authenticate('local')(req, res, function () {
-//             res.redirect('/');
-//         });
-//     });
-// });
+);
 
 module.exports = router;
